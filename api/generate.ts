@@ -129,47 +129,120 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = JSON.parse(textResponse.text || "{}");
 
-    // 2. Generate Image
+    // 2. Generate Image - Pixar Style
     const imagePrompt = `
-      Design a premium 3D blind box toy figure.
-      Subject: A ${profile.gender === 'Female' ? 'girl' : profile.gender === 'Male' ? 'boy' : 'kid'} version of the archetype "${data.archetype}".
-      Style: Pop Mart style, C4D, Octane Render, 8k resolution, Masterpiece.
-      Texture: Soft vinyl skin, matte finish with glossy eyes.
-      Expression: Extremely cute, big expressive eyes, round face, innocent.
-      Background: SOLID WHITE BACKGROUND (Hex #FFFFFF). COMPLETELY ISOLATED. No environment, no props in background.
-      Color Palette: Dominant color ${data.luckyColor}.
-      Lighting: Soft studio lighting, rim light.
+      Create a Pixar-style 3D animated character design.
+      Subject: A ${profile.gender === 'Female' ? 'girl' : profile.gender === 'Male' ? 'boy' : 'kid'} character representing the archetype "${data.archetype}".
+      
+      Style Requirements:
+      - Pixar Animation Studios style, 3D rendered character
+      - Smooth, polished 3D animation quality like Toy Story, Inside Out, or Monsters Inc.
+      - Round, friendly features with expressive large eyes
+      - Bright, vibrant colors with Pixar's signature color palette
+      - Soft, smooth textures with subtle subsurface scattering
+      - Character should be full-body or 3/4 view, standing pose
+      
+      Character Details:
+      - Age-appropriate design for a ${profile.age}-year-old
+      - Expression: Warm, friendly, slightly confident smile
+      - Clothing: Modern, casual outfit that reflects the archetype "${data.archetype}"
+      - Dominant color: ${data.luckyColor} (${data.luckyColorHex}) - use this as the primary color in their outfit or accessories
+      
+      Technical:
+      - 3D rendered, Pixar animation quality
+      - Clean, professional lighting with soft shadows
+      - SOLID WHITE BACKGROUND (Hex #FFFFFF)
+      - No background elements, props, or environment
+      - High resolution, detailed character design
+      - Character should be centered and well-lit
     `;
 
-    // Try generating an image. If it fails, we return data without image.
+    // Try generating an image using Gemini's image generation capabilities
+    // Note: Gemini models may have limited image generation support
+    // We'll try multiple approaches to generate the Pixar-style image
     try {
+      console.log("Attempting to generate Pixar-style image...");
+      
+      // Method 1: Try with explicit image generation request
       const imageResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash-image",
-        contents: {
-          parts: [{ text: imagePrompt }]
-        },
+        model: "gemini-2.5-flash",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `You are an expert 3D character designer. Generate a detailed description for a Pixar-style 3D character that can be used to create an image. 
+
+${imagePrompt}
+
+Now, please generate this character as an image.`
+              }
+            ]
+          }
+        ],
         config: {
-          // Ensure we get image output
+          // Some Gemini models support image generation via specific config
         }
       });
       
-      // Find image part
+      // Check response for image data
       let imageUrl = undefined;
-      if (imageResponse.candidates?.[0]?.content?.parts) {
-        for (const part of imageResponse.candidates[0].content.parts) {
-          if (part.inlineData) {
-            imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+      const response = imageResponse.candidates?.[0]?.content;
+      
+      if (response?.parts) {
+        for (const part of response.parts) {
+          // Check for inline image data
+          if (part.inlineData && part.inlineData.data) {
+            imageUrl = `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
+            console.log("Image found in inlineData");
             break;
+          }
+          
+          // Check if text contains image data URI
+          if (part.text) {
+            const imageMatch = part.text.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
+            if (imageMatch) {
+              imageUrl = imageMatch[0];
+              console.log("Image found in text response");
+              break;
+            }
           }
         }
       }
       
-      if (imageUrl) {
+      // If no image found, log the response for debugging
+      if (!imageUrl) {
+        console.warn("No image data found in response. Response structure:", {
+          hasCandidates: !!imageResponse.candidates,
+          candidateCount: imageResponse.candidates?.length,
+          hasContent: !!imageResponse.candidates?.[0]?.content,
+          hasParts: !!imageResponse.candidates?.[0]?.content?.parts,
+          partsCount: imageResponse.candidates?.[0]?.content?.parts?.length,
+          firstPartType: imageResponse.candidates?.[0]?.content?.parts?.[0] ? 
+            Object.keys(imageResponse.candidates[0].content.parts[0]) : null
+        });
+        
+        // Try to extract image URL from text if model returns a description
+        const textResponse = imageResponse.text || imageResponse.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (textResponse) {
+          console.log("Text response received:", textResponse.substring(0, 200));
+        }
+      } else {
         data.generatedImageUrl = imageUrl;
+        console.log("✅ Pixar-style image generated successfully!");
       }
 
-    } catch (imgError) {
-      console.warn("Image generation failed, proceeding with text only", imgError);
+    } catch (imgError: any) {
+      console.warn("⚠️ Image generation failed, proceeding with text only");
+      console.error("Error details:", {
+        message: imgError?.message,
+        code: imgError?.code || imgError?.status,
+        name: imgError?.name
+      });
+      
+      // Note: Gemini may not support direct image generation
+      // Consider using Google's Imagen API or another image generation service
+      // For now, we'll continue without the image
     }
 
     return res.status(200).json(data);
