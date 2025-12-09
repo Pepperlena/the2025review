@@ -1,5 +1,8 @@
 import { Question, UITheme, ThemeId, Language } from './types';
 
+// Buy Me a Coffee configuration
+export const BUY_ME_A_COFFEE_URL = 'https://buymeacoffee.com/aigeniestudio';
+
 export const TRANSLATIONS = {
   [Language.EN]: {
     start: "Reveal Your 2025",

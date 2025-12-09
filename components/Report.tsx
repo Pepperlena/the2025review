@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UITheme, CharacterCardData, ThemeId, ProfileData, Answer } from '../types';
 import ReactMarkdown from 'react-markdown';
+import { BUY_ME_A_COFFEE_URL } from '../constants';
 
 interface ReportProps {
   data: CharacterCardData;
@@ -264,6 +265,30 @@ const Report: React.FC<ReportProps> = ({ data, profile, answers, theme, onRestar
         >
             📄 Export Q&A to PDF
         </button>
+
+        {/* Buy Me a Coffee Button */}
+        <a
+            href={BUY_ME_A_COFFEE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`
+                w-full py-4 rounded-xl flex items-center justify-center gap-3
+                font-bold text-sm uppercase tracking-wide
+                transition-all hover:scale-105 active:scale-95
+                ${theme.id === ThemeId.JOURNAL ? 'rounded-md' : 'rounded-full'}
+                ${
+                    theme.id === ThemeId.TURRELL
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50'
+                        : theme.id === ThemeId.POP_GLASS
+                        ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-lg shadow-amber-400/40 hover:shadow-amber-400/60'
+                        : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 border-2 border-amber-600'
+                }
+            `}
+        >
+            <span className="text-xl">☕</span>
+            <span>Support This Project</span>
+            <span className="text-xs opacity-80">→</span>
+        </a>
 
         <button 
             onClick={onRestart}
