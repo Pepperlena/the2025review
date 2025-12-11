@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { UITheme, CharacterCardData, ThemeId, ProfileData, Answer } from '../types';
 import ReactMarkdown from 'react-markdown';
 import { BUY_ME_A_COFFEE_URL } from '../constants';
@@ -13,6 +13,7 @@ interface ReportProps {
 
 const Report: React.FC<ReportProps> = ({ data, profile, answers, theme, onRestart }) => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -25,14 +26,49 @@ const Report: React.FC<ReportProps> = ({ data, profile, answers, theme, onRestar
     });
   };
 
-  const handleSave = () => {
-    // Simulated save
-    showToast("Card saved to Photos! (Simulated) 📸");
-    if (data.generatedImageUrl) {
+  const handleSave = async () => {
+    if (!cardRef.current) {
+      showToast("Error: Could not save card. Please try again.");
+      return;
+    }
+
+    try {
+      // Dynamically import html2canvas
+      const html2canvas = (await import('html2canvas')).default;
+      
+      showToast("Generating image... 📸");
+      
+      // Capture the card element
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: null,
+        scale: 2, // Higher quality
+        useCORS: true,
+        logging: false,
+        width: cardRef.current.offsetWidth,
+        height: cardRef.current.offsetHeight,
+      });
+
+      // Convert canvas to blob and download
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          showToast("Error generating image. Please try again.");
+          return;
+        }
+        
+        const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = data.generatedImageUrl;
+        link.href = url;
         link.download = `2025-Review-${profile.nickname}.png`;
-        link.click(); 
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showToast("Card saved! 💾");
+      }, 'image/png');
+    } catch (error) {
+      console.error('Error saving card:', error);
+      showToast("Error saving card. Please try again.");
     }
   };
 
@@ -97,7 +133,9 @@ const Report: React.FC<ReportProps> = ({ data, profile, answers, theme, onRestar
       </h1>
 
       {/* THE CARD CONTAINER */}
-      <div className={`
+      <div 
+        ref={cardRef}
+        className={`
         relative w-full max-w-lg p-8 flex flex-col overflow-visible
         transform transition-transform duration-500 mt-12
         ${theme.id === ThemeId.JOURNAL ? 'rounded-sm bg-white border border-stone-300' : ''}
