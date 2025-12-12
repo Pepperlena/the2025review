@@ -23,6 +23,10 @@ export default defineConfig(({ mode }) => {
         outDir: 'dist',
         assetsDir: 'assets',
         emptyOutDir: true
+      },
+      preview: {
+        port: 4173,
+        host: '0.0.0.0'
       }
     };
 });
