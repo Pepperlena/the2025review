@@ -3,9 +3,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-    // Use base path for production builds (Vercel deployment)
-    // In development, use root path for easier local testing
-    const base = mode === 'production' ? '/year-in-review/' : '/';
+    // Always use base path for consistency
+    // Vercel will handle the routing correctly
+    const base = '/year-in-review/';
     
     return {
       base,
@@ -18,6 +18,11 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        outDir: 'dist',
+        assetsDir: 'assets',
+        emptyOutDir: true
       }
     };
 });
