@@ -1,25 +1,12 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/year-in-review",
       "destination": "/year-in-review/index.html"
     },
     {
-      "source": "/year-in-review/((?!api/).*)",
+      "source": "/year-in-review/((?!api/|assets/).*)",
       "destination": "/year-in-review/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/year-in-review/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
     }
   ]
 }
