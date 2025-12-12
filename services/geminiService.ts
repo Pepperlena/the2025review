@@ -2,7 +2,9 @@ import { Answer, CharacterCardData, ProfileData, Language } from "../types";
 
 const processAnswers = async (answers: Answer[], profile: ProfileData, language: Language): Promise<CharacterCardData> => {
   try {
-    const response = await fetch("/api/generate", {
+    // Use absolute path for API to work with subpath deployment
+    const apiPath = import.meta.env.BASE_URL ? `${import.meta.env.BASE_URL}api/generate` : '/api/generate';
+    const response = await fetch(apiPath, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
