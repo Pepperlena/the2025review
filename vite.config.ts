@@ -3,8 +3,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-    // Only use base path in production builds
-    const base = process.env.VERCEL || mode === 'production' ? '/year-in-review/' : '/';
+    // Use base path for production builds (Vercel deployment)
+    // In development, use root path for easier local testing
+    const base = mode === 'production' ? '/year-in-review/' : '/';
     
     return {
       base,
