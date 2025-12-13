@@ -2,9 +2,7 @@ import { Answer, CharacterCardData, ProfileData, Language } from "../types";
 
 const processAnswers = async (answers: Answer[], profile: ProfileData, language: Language): Promise<CharacterCardData> => {
   try {
-    // Vercel API routes are at the root, not under the base path
-    // So we always use /api/generate regardless of base path
-    const response = await fetch('/api/generate', {
+    const response = await fetch("/api/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
