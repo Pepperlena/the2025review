@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { UITheme, CharacterCardData, ThemeId, ProfileData, Answer } from '../types';
 import ReactMarkdown from 'react-markdown';
 import { BUY_ME_A_COFFEE_URL } from '../constants';
+import { analytics } from '../utils/analytics';
 
 interface ReportProps {
   data: CharacterCardData;
@@ -21,6 +22,7 @@ const Report: React.FC<ReportProps> = ({ data, profile, answers, theme, onRestar
   };
 
   const handleShare = () => {
+    analytics.trackShare();
     navigator.clipboard.writeText(window.location.href).then(() => {
         showToast("Link Copied! Ready to share. 🔗");
     });
@@ -64,6 +66,7 @@ const Report: React.FC<ReportProps> = ({ data, profile, answers, theme, onRestar
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
+        analytics.trackSave();
         showToast("Card saved! 💾");
       }, 'image/png');
     } catch (error) {
@@ -309,6 +312,7 @@ const Report: React.FC<ReportProps> = ({ data, profile, answers, theme, onRestar
             href={BUY_ME_A_COFFEE_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => analytics.trackSupportClick()}
             className={`
                 w-full py-4 rounded-xl flex items-center justify-center gap-3
                 font-bold text-sm uppercase tracking-wide

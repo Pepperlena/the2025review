@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppPhase, ThemeId, UITheme, Answer, CharacterCardData, ProfileData, Language } from './types';
-import { THEMES, FORTUNE_MESSAGES } from './constants';
+import { THEMES, FORTUNE_MESSAGES, GA_MEASUREMENT_ID } from './constants';
 import Welcome from './components/Welcome';
 import ThemeSelector from './components/ThemeSelector';
 import Onboarding from './components/Onboarding';
@@ -8,6 +8,7 @@ import QuestionFlow from './components/QuestionFlow';
 import ProfileInput from './components/ProfileInput';
 import Report from './components/Report';
 import { geminiService } from './services/geminiService';
+import { initGA, trackPageView, analytics } from './utils/analytics';
 
 const App: React.FC = () => {
   const [phase, setPhase] = useState<AppPhase>(AppPhase.WELCOME);
@@ -24,7 +25,33 @@ const App: React.FC = () => {
 
   const currentTheme: UITheme = THEMES[themeId];
 
+  // Initialize Google Analytics on mount
+  useEffect(() => {
+    initGA(GA_MEASUREMENT_ID);
+    // Send initial page view
+    trackPageView('/year-in-review/Welcome', 'Welcome - The 2025 Review');
+  }, []);
+
+  // Track page views when phase changes (manual page_view tracking)
+  useEffect(() => {
+    const phaseNames: Record<AppPhase, { path: string; title: string }> = {
+      [AppPhase.WELCOME]: { path: '/year-in-review/Welcome', title: 'Welcome - The 2025 Review' },
+      [AppPhase.THEME_SELECT]: { path: '/year-in-review/Theme-Select', title: 'Theme Select - The 2025 Review' },
+      [AppPhase.ONBOARDING]: { path: '/year-in-review/Onboarding', title: 'Onboarding - The 2025 Review' },
+      [AppPhase.QUESTIONS]: { path: '/year-in-review/Questions', title: 'Questions - The 2025 Review' },
+      [AppPhase.PROFILE_INPUT]: { path: '/year-in-review/Profile-Input', title: 'Profile Input - The 2025 Review' },
+      [AppPhase.PROCESSING]: { path: '/year-in-review/Processing', title: 'Processing - The 2025 Review' },
+      [AppPhase.REPORT]: { path: '/year-in-review/Report', title: 'Report - The 2025 Review' },
+    };
+    
+    const phaseInfo = phaseNames[phase];
+    if (phaseInfo) {
+      trackPageView(phaseInfo.path, phaseInfo.title);
+    }
+  }, [phase]);
+
   const handleStart = () => {
+    analytics.trackStart();
     setPhase(AppPhase.THEME_SELECT);
   };
 
@@ -33,14 +60,17 @@ const App: React.FC = () => {
   };
 
   const handleThemeConfirm = () => {
+    analytics.trackThemeSelect(themeId);
     setPhase(AppPhase.ONBOARDING);
   };
 
   const handleOnboardingComplete = () => {
+    analytics.trackOnboardingComplete();
     setPhase(AppPhase.QUESTIONS);
   };
 
   const handleQuestionsComplete = (collectedAnswers: Answer[]) => {
+    analytics.trackQuestionComplete(collectedAnswers.length);
     setAnswers(collectedAnswers);
     setPhase(AppPhase.PROFILE_INPUT);
   };
@@ -58,6 +88,10 @@ const App: React.FC = () => {
     try {
       const result = await geminiService.processAnswers(answers, profileData, language);
       setCardData(result);
+      // Track report generation when data is ready
+      if (result) {
+        analytics.trackReportGenerated(result.archetype, result.rarity);
+      }
     } catch (err) {
       console.error(err);
       setError("The engine stalled! Please try again.");
@@ -144,7 +178,10 @@ const App: React.FC = () => {
             onStart={handleStart} 
             theme={currentTheme} 
             language={language}
-            onLanguageChange={setLanguage}
+            onLanguageChange={(lang) => {
+              analytics.trackLanguageChange(lang);
+              setLanguage(lang);
+            }}
         />
       )}
 
