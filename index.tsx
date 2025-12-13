@@ -1,15 +1,25 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import App from "./App";
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+function YearInReview() {
+  return <div style={{ padding: 24 }}>Year in Review</div>;
 }
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
+const container = document.getElementById("root");
+
+if (!container) {
+  throw new Error("Root container missing in index.html");
+}
+
+createRoot(container).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/year-in-review" element={<YearInReview />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
