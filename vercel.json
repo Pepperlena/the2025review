@@ -1,6 +1,20 @@
 {
   "rewrites": [
-    { "source": "/year-in-review", "destination": "/index.html" },
-    { "source": "/year-in-review/(.*)", "destination": "/index.html" }
+    {
+      "source": "/year-in-review",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/year-in-review/((?!api/|assets/).*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dessert-soul",
+      "destination": "/dessert-soul/index.html"
+    },
+    {
+      "source": "/dessert-soul/(.*)",
+      "destination": "/dessert-soul/$1"
+    }
   ]
 }
