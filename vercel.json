@@ -15,8 +15,8 @@
       "destination": "/dessert-soul/index.html"
     },
     {
-      "source": "/dessert-soul/(.*)",
-      "destination": "/dessert-soul/$1"
+      "source": "/dessert-soul/((?!assets/).*)",
+      "destination": "/dessert-soul/index.html"
     }
   ]
 }
